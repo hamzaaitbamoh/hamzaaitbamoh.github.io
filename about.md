@@ -5,8 +5,12 @@ description: This is what I do.
 background: "/img/bg-about.jpg"
 ---
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit. Sed quisquam ut perspiciatis, repudiandae nulla animi iste vel, praesentium repellendus molestias aliquid consequatur, earum rem qui error voluptates eius enim consequuntur!
+Hi there!
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ex alias, earum consectetur quia natus ducimus voluptate explicabo, hic porro reprehenderit, quasi? Tenetur ipsum distinctio laboriosam perspiciatis officiis dolore, architecto id.
+When I was a child, I enjoyed doing pranks to my friends and family, like spying on the camera, spying on the wire, make them click links to take them to funny websites... I've never been aware of how those tools work, I was just using them for fun.
+In fact, I was a script kiddie!
 
-Lorem ipsum dolor sit amet, consectetur adipisicing elit. Totam inventore aspernatur repellendus incidunt adipisci modi voluptates recusandae iste eligendi, repudiandae corporis quod aut, optio! Explicabo quaerat unde voluptatem! Itaque, eum!
+I am now a software engineering student.
+I love doing ctfs and cybersec related challenges.
+
+I'm journaling my journey of going beyond being a script kiddie and sharing it with the world.
