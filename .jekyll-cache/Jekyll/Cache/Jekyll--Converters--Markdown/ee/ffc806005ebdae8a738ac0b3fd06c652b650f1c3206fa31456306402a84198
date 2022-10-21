@@ -1,0 +1,85 @@
+I"�<h1 id="phoenix-stack-1">Phoenix stack 1</h1>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * phoenix/stack-one, by https://exploit.education
+ *
+ * The aim is to change the contents of the changeme variable to 0x496c5962
+ *
+ * Did you hear about the kid napping at the local school?
+ * It's okay, they woke up.
+ *
+ */</span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;err.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define BANNER \
+  "Welcome to " LEVELNAME ", brought to you by https://exploit.education"
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+    <span class="k">volatile</span> <span class="kt">int</span> <span class="n">changeme</span><span class="p">;</span>
+  <span class="p">}</span> <span class="n">locals</span><span class="p">;</span>
+
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">BANNER</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">argc</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">errx</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">"specify an argument, to be copied into the </span><span class="se">\"</span><span class="s">buffer</span><span class="se">\"</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">locals</span><span class="p">.</span><span class="n">changeme</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">strcpy</span><span class="p">(</span><span class="n">locals</span><span class="p">.</span><span class="n">buffer</span><span class="p">,</span> <span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">]);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">locals</span><span class="p">.</span><span class="n">changeme</span> <span class="o">==</span> <span class="mh">0x496c5962</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">"Well done, you have successfully set changeme to the correct value"</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Getting closer! changeme is currently 0x%08x, we want 0x496c5962</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+        <span class="n">locals</span><span class="p">.</span><span class="n">changeme</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>we have pretty much the same code as <a href="https://0x0h3mz4.github.io/2022/10/19/phoenix-stack-zero.html">stack 0</a> ,what’s been added is:</p>
+
+<ul>
+  <li>Here we have to enter the buffer as an argument so that it would be assigned to <code class="language-plaintext highlighter-rouge">buffer</code> with the help of the function <strong>strcpy.</strong></li>
+  <li>Note that <strong>strcpy</strong> is vulnerable because the source size could be more than destination size.</li>
+  <li>the if condition is checking whether the integer <code class="language-plaintext highlighter-rouge">changeme</code> is equal to <code class="language-plaintext highlighter-rouge">0x496c5962</code></li>
+</ul>
+
+<p>So our task here is not only to change the variable <code class="language-plaintext highlighter-rouge">changeme</code> to some random value but to specify the value to be <code class="language-plaintext highlighter-rouge">0x496c5962</code></p>
+
+<p>So we overwrite the buffer with a string which must have <code class="language-plaintext highlighter-rouge">0x496c5962</code> at the end so that it will take the value of <code class="language-plaintext highlighter-rouge">changeme</code> .</p>
+
+<p>Imagine it like that:</p>
+
+<p><img src="/img/posts/stack1/Untitled.png" alt="Untitled" /></p>
+
+<p>1-<em><code class="language-plaintext highlighter-rouge">changeme</code> is still 0.</em></p>
+
+<p><img src="/img/posts/stack1/Untitled%201.png" alt="Untitled" /></p>
+
+<p>2- We added 4 charcters “B” and let’s see if <strong>BBBB</strong> is assigned to <code class="language-plaintext highlighter-rouge">changeme</code></p>
+
+<p><img src="/img/posts/stack1/Untitled%202.png" alt="Untitled" /></p>
+
+<p>So basically <strong>BBBB</strong> in hexadecimal is <strong>42424242</strong></p>
+
+<p><img src="/img/posts/stack1/Untitled%203.png" alt="Untitled" /></p>
+
+<p>Nice!!! so all we have to do is to replace <strong>BBBB</strong> with <code class="language-plaintext highlighter-rouge">0x496c5962</code></p>
+
+<p><img src="/img/posts/stack1/Untitled%204.png" alt="Untitled" /></p>
+
+<p><em>you got to reverse <code class="language-plaintext highlighter-rouge">0x496c5962</code> to be <code class="language-plaintext highlighter-rouge">\x62\x59\x6c\x49</code> with this weird syntax</em></p>
+
+<p>Congrats!!!</p>
+
+<p><img src="/img/posts/stack1/df.png" alt="df.png" /></p>
+:ET

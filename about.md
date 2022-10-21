@@ -1,7 +1,7 @@
 ---
 layout: page
 title: About Me
-description: This is what I do.
+description:
 background: "/img/bg-about.jpg"
 ---
 
@@ -13,4 +13,4 @@ In fact, I was a script kiddie!
 I am now a software engineering student.
 I love doing ctfs and cybersec related challenges.
 
-I'm journaling my journey of going beyond being a script kiddie and sharing it with the world.
+I'm journaling my journey of going beyond being a script kiddie and I'm sharing it.
