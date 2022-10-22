@@ -1,0 +1,75 @@
+I"g<h1 id="phoenix-stack-2">Phoenix stack 2</h1>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * phoenix/stack-two, by https://exploit.education
+ *
+ * The aim is to change the contents of the changeme variable to 0x0d0a090a
+ *
+ * If you're Russian to get to the bath room, and you are Finnish when you get
+ * out, what are you when you are in the bath room?
+ *
+ * European!
+ */</span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;err.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define BANNER \
+  "Welcome to 0x0h3mz4 brought to you by https://exploit.education"
+</span>
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+    <span class="k">volatile</span> <span class="kt">int</span> <span class="n">changeme</span><span class="p">;</span>
+  <span class="p">}</span> <span class="n">locals</span><span class="p">;</span>
+
+  <span class="kt">char</span> <span class="o">*</span><span class="n">ptr</span><span class="p">;</span>
+
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">BANNER</span><span class="p">);</span>
+
+  <span class="n">ptr</span> <span class="o">=</span> <span class="n">getenv</span><span class="p">(</span><span class="s">"ExploitEducation"</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">ptr</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">errx</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="s">"please set the ExploitEducation environment variable"</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">locals</span><span class="p">.</span><span class="n">changeme</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+  <span class="n">strcpy</span><span class="p">(</span><span class="n">locals</span><span class="p">.</span><span class="n">buffer</span><span class="p">,</span> <span class="n">ptr</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">locals</span><span class="p">.</span><span class="n">changeme</span> <span class="o">==</span> <span class="mh">0x0d0a090a</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">puts</span><span class="p">(</span><span class="s">"Well done, you have successfully set changeme to the correct value"</span><span class="p">);</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"Almost! changeme is currently 0x%08x, we want 0x0d0a090a</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span>
+        <span class="n">locals</span><span class="p">.</span><span class="n">changeme</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Equally to <a href="https://0x0h3mz4.github.io/2022/10/22/phoenix-stack-one.html">stack1</a> except that an environment variable must be set.</p>
+
+<p>Initially, let’s run the program without setting the environment variable:</p>
+
+<p><img src="/img/posts/stack2/Untitled.png" alt="Untitled" /></p>
+
+<p>Then Let’s set that sucker with some python scripting!</p>
+
+<p><img src="/img/posts/stack2/Untitled%201.png" alt="Untitled" /></p>
+
+<p>Let’s print that sucker</p>
+
+<p><img src="/img/posts/stack2/Untitled%202.png" alt="Untitled" /></p>
+
+<p>Tbh I don’t know if <code class="language-plaintext highlighter-rouge">0x0d0a090a</code> has been added at the end of those As, since I don’t want to convert <code class="language-plaintext highlighter-rouge">0x0d0a090a</code> to a string to make sure.</p>
+
+<p>Let’s test that anyways 😅</p>
+
+<p><img src="/img/posts/stack2/Untitled%203.png" alt="Untitled" /></p>
+
+<p>Congrats, it has been set!!!</p>
+
+<p><img src="/img/posts/stack2/df.png" alt="df.png" /></p>
+:ET
