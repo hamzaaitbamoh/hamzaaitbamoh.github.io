@@ -1,0 +1,82 @@
+I"<h1 id="phoenix-stack-3">Phoenix stack 3</h1>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * phoenix/stack-three, by https://exploit.education
+ *
+ * The aim is to change the contents of the changeme variable to 0x0d0a090a
+ *
+ * When does a joke become a dad joke?
+ *   When it becomes apparent.
+ *   When it's fully groan up.
+ *
+ */</span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;err.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define BANNER \
+  "Welcome to " LEVELNAME ", brought to you by https://exploit.education"
+</span>
+<span class="kt">char</span> <span class="o">*</span><span class="nf">gets</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">complete_level</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"Congratulations, you've finished "</span> <span class="n">LEVELNAME</span> <span class="s">" :-) Well done!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">struct</span> <span class="p">{</span>
+    <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+    <span class="k">volatile</span> <span class="kt">int</span> <span class="p">(</span><span class="o">*</span><span class="n">fp</span><span class="p">)();</span>
+  <span class="p">}</span> <span class="n">locals</span><span class="p">;</span>
+
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">BANNER</span><span class="p">);</span>
+
+  <span class="n">locals</span><span class="p">.</span><span class="n">fp</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>
+  <span class="n">gets</span><span class="p">(</span><span class="n">locals</span><span class="p">.</span><span class="n">buffer</span><span class="p">);</span>
+
+  <span class="k">if</span> <span class="p">(</span><span class="n">locals</span><span class="p">.</span><span class="n">fp</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"calling function pointer @ %p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">locals</span><span class="p">.</span><span class="n">fp</span><span class="p">);</span>
+    <span class="n">fflush</span><span class="p">(</span><span class="n">stdout</span><span class="p">);</span>
+    <span class="n">locals</span><span class="p">.</span><span class="n">fp</span><span class="p">();</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"function pointer remains unmodified :~( better luck next time!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p><em>In C, like normal data pointers (int _, char _, etc), we can have pointers to functions as well.</em></p>
+
+<p>Our challenge here is to make <code class="language-plaintext highlighter-rouge">fp</code> points to the function <code class="language-plaintext highlighter-rouge">complete_level</code></p>
+
+<p>Let’s run the code and see</p>
+
+<p><img src="/img/posts/stack3/Untitled.png" alt="Untitled" /></p>
+
+<p>Ok now we need to retrieve the address memory of the function <code class="language-plaintext highlighter-rouge">complete_level</code></p>
+
+<p>Let’s disassemble the main function with gdb</p>
+
+<p><img src="/img/posts/stack3/Untitled%201.png" alt="Untitled" /></p>
+
+<p>cool! we can understand the pattern of the code just by following those assembly instruction.</p>
+
+<p>But nothing here special about the wanted function <code class="language-plaintext highlighter-rouge">complete_level</code></p>
+
+<p>We can otherwise just type print to retrieve the address.</p>
+
+<p><img src="/img/posts/stack3/Untitled%202.png" alt="Untitled" /></p>
+
+<p>Cool cool! Now that we have the address we can simply execute the same attack we did on the previous stacks.</p>
+
+<p><img src="/img/posts/stack3/Untitled%203.png" alt="Untitled" /></p>
+
+<p>Great job!</p>
+
+<p><img src="/img/posts/stack3/df.png" alt="df.png" /></p>
+:ET
