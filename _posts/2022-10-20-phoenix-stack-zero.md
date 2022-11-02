@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Exploit education phoenix | stack Zero"
-subtitle: "Overwrite something we shouldn't"
+subtitle: "Overwrite something we shouldn't, Oops"
 date: 2022-10-20 23:45:13 -0400
 background: "/img/posts/Pheonix.jpg"
 ---

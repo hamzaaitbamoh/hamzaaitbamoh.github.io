@@ -1,7 +1,7 @@
 ---
 layout: post
 title: "Exploit education phoenix | stack Three"
-subtitle: "Overwrite something we shouldn't"
+subtitle: "Overwrite function pointers stored on the stack"
 date: 2022-10-23 23:45:13 -0400
 background: "/img/posts/Pheonix.jpg"
 ---

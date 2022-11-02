@@ -1,0 +1,95 @@
+I"�<h1 id="phoenix-stack-4">Phoenix stack 4</h1>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cm">/*
+ * phoenix/stack-four, by https://exploit.education
+ *
+ * The aim is to execute the function complete_level by modifying the
+ * saved return address, and pointing it to the complete_level() function.
+ *
+ * Why were the apple and orange all alone? Because the bananna split.
+ */</span>
+
+<span class="cp">#include</span> <span class="cpf">&lt;err.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;unistd.h&gt;</span><span class="cp">
+</span>
+<span class="cp">#define BANNER \
+  "Welcome to " LEVELNAME ", brought to you by https://exploit.education"
+</span>
+<span class="kt">char</span> <span class="o">*</span><span class="nf">gets</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">);</span>
+
+<span class="kt">void</span> <span class="nf">complete_level</span><span class="p">()</span> <span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"Congratulations, you've finished "</span> <span class="n">LEVELNAME</span> <span class="s">" :-) Well done!</span><span class="se">\n</span><span class="s">"</span><span class="p">);</span>
+  <span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">void</span> <span class="nf">start_level</span><span class="p">()</span> <span class="p">{</span>
+  <span class="kt">char</span> <span class="n">buffer</span><span class="p">[</span><span class="mi">64</span><span class="p">];</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">ret</span><span class="p">;</span>
+
+  <span class="n">gets</span><span class="p">(</span><span class="n">buffer</span><span class="p">);</span>
+
+  <span class="n">ret</span> <span class="o">=</span> <span class="n">__builtin_return_address</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"and will be returning to %p</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">ret</span><span class="p">);</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">int</span> <span class="n">argc</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">argv</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">BANNER</span><span class="p">);</span>
+  <span class="n">start_level</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Things are getting fun! but before getting into the fun part, I need to tell you a secret about the <code class="language-plaintext highlighter-rouge">rip</code> , <code class="language-plaintext highlighter-rouge">rsp</code> and <code class="language-plaintext highlighter-rouge">rbp</code> registers.</p>
+
+<p>When I disassemble main using gdb:</p>
+
+<p><img src="/img/posts/stack4/Untitled.png" alt="Untitled" /></p>
+
+<p>the instruction highlighted <strong>call</strong> is not only calling <strong>start_level</strong> , it is in fact pushing the <code class="language-plaintext highlighter-rouge">rip</code> register of the next instruction into the stack then it moves to execute those instructions inside <strong>start_level</strong>.</p>
+
+<p>In that case: 0x40068d will be pushed into the stack then above it <code class="language-plaintext highlighter-rouge">rbp</code> will be pushed, move <code class="language-plaintext highlighter-rouge">rsp</code> into <code class="language-plaintext highlighter-rouge">rbp</code> and so on…</p>
+
+<p><img src="/img/posts/stack4/Untitled%201.png" alt="Untitled" /></p>
+
+<p>The reason why it does this: is because at the end when we hit <strong>leave,</strong> <code class="language-plaintext highlighter-rouge">rsp</code> will be set to <code class="language-plaintext highlighter-rouge">rbp</code> and then <code class="language-plaintext highlighter-rouge">rbp</code> will be popped out of the stack which means the frame stack of <strong>start_level</strong> will be popped out.</p>
+
+<p><img src="/img/posts/stack4/Untitled%202.png" alt="Untitled" /></p>
+
+<p><img src="/img/posts/stack4/Untitled%203.png" alt="Untitled" /></p>
+
+<p>At the end <strong>ret</strong> will be having the old saved <code class="language-plaintext highlighter-rouge">rip</code> which is 0x40068d (in main) and popped it out from the stack so that it could be executed.</p>
+
+<p>Now that we know that, we can see that we have to overwrite to the ret value to be the <strong>complete_level</strong> function adress.</p>
+
+<p>Let’s get to work!</p>
+
+<p>Ok, now we’ll make breakpoint right after reading the input with <strong>gets</strong> function.</p>
+
+<p>And then I’m going to enter a buffer of 64 characters, I am going to write different alphabets to visualize on the stack by examining the <code class="language-plaintext highlighter-rouge">rsp</code> register</p>
+
+<p><img src="/img/posts/stack4/Untitled%204.png" alt="Untitled" /></p>
+
+<p><img src="/img/posts/stack4/Untitled%205.png" alt="Untitled" /></p>
+
+<p>We can see now the buffer, and as we said the buffer is some instruction of the <strong>start_level</strong> that’s popped into the stack above a saved <code class="language-plaintext highlighter-rouge">rip</code> which is <strong>0x40068d</strong></p>
+
+<p>This address is what the program will be returning to after executing <strong>start_level</strong> but we want to return to the address of <strong>complete_level</strong> so we will overwrite to replace <strong>0x40068d</strong> by <strong>0x40061d</strong> (which is the adress of complete_level)</p>
+
+<p><img src="/img/posts/stack4/Untitled%206.png" alt="Untitled" /></p>
+
+<p>So we can simply count how many characters we should overwrite to reach <strong>0x40068d</strong></p>
+
+<p>⇒ 24 more characters which means we need a buffer of 88 (64+24=88)</p>
+
+<p><img src="/img/posts/stack4/Untitled%207.png" alt="Untitled" /></p>
+
+<p>simply run this python script and pipe it into the binary:</p>
+
+<p><img src="/img/posts/stack4/Untitled%208.png" alt="Untitled" /></p>
+
+<p>That’s it for this level.</p>
+
+<p><img src="/img/posts/stack4/df.png" alt="df.png" /></p>
+:ET
