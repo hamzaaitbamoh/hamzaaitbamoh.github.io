@@ -1,14 +1,17 @@
 ---
 layout: post
 title: " HTB | Reverse Engineering | behind the scenes:"
-subtitle: "Make a patch"
+subtitle: "UD2"
 date: 2022-11-17 23:45:13 -0400
 background: "/img/posts/RE.jpg"
 ---
 
 # HTB | Reverse Engineering | behind the scenes:
 
-This is a challenge considered as very easy challenge, but as long as I’m just starting learning some reverse engineering, it’s not that easy for me .
+the challenge quotes:
+“_After struggling to secure our secret strings for a long time, we finally figured out the solution to our problem: Make decompilation harder. It should now be impossible to figure out how our programs work!”_
+
+We will see if that's impossible xD
 
 So we have our executable file here.
 

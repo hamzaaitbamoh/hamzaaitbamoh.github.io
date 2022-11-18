@@ -1,0 +1,175 @@
+I"�]<h1 id="hack-the-box--simple-encryptor">Hack the box | simple encryptor:</h1>
+
+<p>The challenge says:</p>
+
+<p>“<em>On our regular checkups of our secret flag storage server we found out that we were hit by ransomware! The original flag data is nowhere to be found, but luckily we not only have the encrypted file but also the encryption program itself.”</em></p>
+
+<p><em>Ransomware is a type of malware that threatens to publish or blocks access to data or a computer system, usually by encrypting it, until the victim pays a ransom fee to the attacker.</em></p>
+
+<p>Ok so we have to decrypt that file which is <code class="language-plaintext highlighter-rouge">flag.enc</code></p>
+
+<p><img src="Hack%20the%20box%20simple%20encryptor%205f8803c102474ba391f296090a42c244/Untitled.png" alt="Untitled" /></p>
+
+<p>Let’s examine this encryptor with ghidra.</p>
+
+<p><img src="Hack%20the%20box%20simple%20encryptor%205f8803c102474ba391f296090a42c244/Untitled%201.png" alt="Untitled" /></p>
+
+<p>Okay so we got some interesting code.</p>
+
+<p>After decompiling that main function we see the following code:</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">undefined8</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+
+<span class="p">{</span>
+  <span class="kt">int</span> <span class="n">iVar1</span><span class="p">;</span>
+  <span class="kt">time_t</span> <span class="n">tVar2</span><span class="p">;</span>
+  <span class="kt">long</span> <span class="n">in_FS_OFFSET</span><span class="p">;</span>
+  <span class="n">uint</span> <span class="n">local_40</span><span class="p">;</span>
+  <span class="n">uint</span> <span class="n">local_3c</span><span class="p">;</span>
+  <span class="kt">long</span> <span class="n">local_38</span><span class="p">;</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">local_30</span><span class="p">;</span>
+  <span class="kt">size_t</span> <span class="n">local_28</span><span class="p">;</span>
+  <span class="kt">void</span> <span class="o">*</span><span class="n">local_20</span><span class="p">;</span>
+  <span class="kt">FILE</span> <span class="o">*</span><span class="n">local_18</span><span class="p">;</span>
+  <span class="kt">long</span> <span class="n">local_10</span><span class="p">;</span>
+
+  <span class="n">local_10</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">);</span>
+  <span class="n">local_30</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"flag"</span><span class="p">,</span><span class="s">"rb"</span><span class="p">);</span>
+  <span class="n">fseek</span><span class="p">(</span><span class="n">local_30</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+  <span class="n">local_28</span> <span class="o">=</span> <span class="n">ftell</span><span class="p">(</span><span class="n">local_30</span><span class="p">);</span>
+  <span class="n">fseek</span><span class="p">(</span><span class="n">local_30</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+  <span class="n">local_20</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">local_28</span><span class="p">);</span>
+  <span class="n">fread</span><span class="p">(</span><span class="n">local_20</span><span class="p">,</span><span class="n">local_28</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">local_30</span><span class="p">);</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">local_30</span><span class="p">);</span>
+  <span class="n">tVar2</span> <span class="o">=</span> <span class="n">time</span><span class="p">((</span><span class="kt">time_t</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">);</span>
+  <span class="n">local_40</span> <span class="o">=</span> <span class="p">(</span><span class="n">uint</span><span class="p">)</span><span class="n">tVar2</span><span class="p">;</span>
+  <span class="n">srand</span><span class="p">(</span><span class="n">local_40</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">local_38</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">local_38</span> <span class="o">&lt;</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">local_28</span><span class="p">;</span> <span class="n">local_38</span> <span class="o">=</span> <span class="n">local_38</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">iVar1</span> <span class="o">=</span> <span class="n">rand</span><span class="p">();</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">byte</span><span class="p">)</span><span class="n">iVar1</span><span class="p">;</span>
+    <span class="n">local_3c</span> <span class="o">=</span> <span class="n">rand</span><span class="p">();</span>
+    <span class="n">local_3c</span> <span class="o">=</span> <span class="n">local_3c</span> <span class="o">&amp;</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">=</span>
+         <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">sbyte</span><span class="p">)</span><span class="n">local_3c</span> <span class="o">|</span>
+         <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span> <span class="o">-</span> <span class="p">(</span><span class="n">sbyte</span><span class="p">)</span><span class="n">local_3c</span><span class="p">;</span>
+  <span class="p">}</span>
+  <span class="n">local_18</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"flag.enc"</span><span class="p">,</span><span class="s">"wb"</span><span class="p">);</span>
+  <span class="n">fwrite</span><span class="p">(</span><span class="o">&amp;</span><span class="n">local_40</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="n">local_18</span><span class="p">);</span>
+  <span class="n">fwrite</span><span class="p">(</span><span class="n">local_20</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">local_28</span><span class="p">,</span><span class="n">local_18</span><span class="p">);</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">local_18</span><span class="p">);</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">local_10</span> <span class="o">!=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="cm">/* WARNING: Subroutine does not return */</span>
+    <span class="n">__stack_chk_fail</span><span class="p">();</span>
+  <span class="p">}</span>
+  <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>Let’s split the code into 3 parts:</p>
+
+<h3 id="part-1">Part 1:</h3>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">local_10</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">);</span>
+  <span class="n">local_30</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"flag"</span><span class="p">,</span><span class="s">"rb"</span><span class="p">);</span>
+  <span class="n">fseek</span><span class="p">(</span><span class="n">local_30</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span> <span class="c1">//offset to the end</span>
+  <span class="n">local_28</span> <span class="o">=</span> <span class="n">ftell</span><span class="p">(</span><span class="n">local_30</span><span class="p">);</span> <span class="c1">//put the size of the file to local_28</span>
+  <span class="n">fseek</span><span class="p">(</span><span class="n">local_30</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span> <span class="c1">//offset to the start</span>
+  <span class="n">local_20</span> <span class="o">=</span> <span class="n">malloc</span><span class="p">(</span><span class="n">local_28</span><span class="p">);</span> <span class="c1">//allocate a buffer same as file size</span>
+  <span class="n">fread</span><span class="p">(</span><span class="n">local_20</span><span class="p">,</span><span class="n">local_28</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">local_30</span><span class="p">);</span> <span class="c1">//read from the file and put it to the buffer</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">local_30</span><span class="p">);</span> <span class="c1">//close the file</span>
+  <span class="n">tVar2</span> <span class="o">=</span> <span class="n">time</span><span class="p">((</span><span class="kt">time_t</span> <span class="o">*</span><span class="p">)</span><span class="mh">0x0</span><span class="p">);</span> <span class="c1">// put the current calendar time tVar2</span>
+  <span class="n">local_40</span> <span class="o">=</span> <span class="p">(</span><span class="n">uint</span><span class="p">)</span><span class="n">tVar2</span><span class="p">;</span>
+  <span class="n">srand</span><span class="p">(</span><span class="n">local_40</span><span class="p">);</span> <span class="c1">//seeds the random number generator used by the function rand in part 2</span>
+</code></pre></div></div>
+
+<p>this part of the code is simply opening the file , then it reads from it and put its content to a buffer <code class="language-plaintext highlighter-rouge">local_20</code>.</p>
+
+<h3 id="part-2">Part 2:</h3>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">for</span> <span class="p">(</span><span class="n">local_38</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">local_38</span> <span class="o">&lt;</span> <span class="p">(</span><span class="kt">long</span><span class="p">)</span><span class="n">local_28</span><span class="p">;</span> <span class="n">local_38</span> <span class="o">=</span> <span class="n">local_38</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
+		<span class="c1">// looping through the buffer character by character</span>
+    <span class="n">iVar1</span> <span class="o">=</span> <span class="n">rand</span><span class="p">();</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">^</span> <span class="p">(</span><span class="n">byte</span><span class="p">)</span><span class="n">iVar1</span><span class="p">;</span>
+    <span class="c1">//xor operation with rand1</span>
+		<span class="n">local_3c</span> <span class="o">=</span> <span class="n">rand</span><span class="p">();</span>
+    <span class="n">local_3c</span> <span class="o">=</span> <span class="n">local_3c</span> <span class="o">&amp;</span> <span class="mi">7</span><span class="p">;</span>
+    <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">=</span>
+         <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="n">sbyte</span><span class="p">)</span><span class="n">local_3c</span> <span class="o">|</span>
+         <span class="o">*</span><span class="p">(</span><span class="n">byte</span> <span class="o">*</span><span class="p">)((</span><span class="kt">long</span><span class="p">)</span><span class="n">local_20</span> <span class="o">+</span> <span class="n">local_38</span><span class="p">)</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span> <span class="o">-</span> <span class="p">(</span><span class="n">sbyte</span><span class="p">)</span><span class="n">local_3c</span><span class="p">;</span>
+		<span class="c1">// shift left by rand2 or shift right by 8-rand2 which is a rotation left.</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+
+<p>it’s looping through the buffer character by character, and doing some logic operations to it , it is the encryption part.</p>
+
+<h3 id="part-3">Part 3:</h3>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">local_18</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="s">"flag.enc"</span><span class="p">,</span><span class="s">"wb"</span><span class="p">);</span> <span class="c1">//open file</span>
+  <span class="n">fwrite</span><span class="p">(</span><span class="o">&amp;</span><span class="n">local_40</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">4</span><span class="p">,</span><span class="n">local_18</span><span class="p">);</span> <span class="c1">//write 4 bytes of the seed to the file</span>
+  <span class="n">fwrite</span><span class="p">(</span><span class="n">local_20</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="n">local_28</span><span class="p">,</span><span class="n">local_18</span><span class="p">);</span> <span class="c1">//then it writes the buffer after encrypting it</span>
+  <span class="n">fclose</span><span class="p">(</span><span class="n">local_18</span><span class="p">);</span> <span class="c1">//close the file</span>
+  <span class="k">if</span> <span class="p">(</span><span class="n">local_10</span> <span class="o">!=</span> <span class="o">*</span><span class="p">(</span><span class="kt">long</span> <span class="o">*</span><span class="p">)(</span><span class="n">in_FS_OFFSET</span> <span class="o">+</span> <span class="mh">0x28</span><span class="p">))</span> <span class="p">{</span>
+                    <span class="cm">/* WARNING: Subroutine does not return */</span>
+    <span class="n">__stack_chk_fail</span><span class="p">();</span>
+  <span class="p">}</span>
+</code></pre></div></div>
+
+<p>Now that we understand the code, we have to reverse the whole thing:</p>
+
+<ul>
+  <li>Open the file <code class="language-plaintext highlighter-rouge">flag.enc</code></li>
+  <li>Read the first 4 bytes of the file to obtain the seed</li>
+  <li>Read what’s left of the file to obtain the encrypted part</li>
+  <li>generate rand1 and rand2= rand1&amp;7</li>
+  <li>use rand2 for rotation right</li>
+  <li>use rand1 for xor</li>
+</ul>
+
+<p>Here’s the code to decrypt <code class="language-plaintext highlighter-rouge">flag.enc</code> :</p>
+
+<div class="language-c highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp">
+#include</span> <span class="cpf">&lt;stdlib.h&gt;</span><span class="cp">
+</span>
+<span class="kt">int</span> <span class="nf">read_file</span><span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="n">name</span><span class="p">,</span> <span class="kt">char</span> <span class="o">**</span><span class="n">buff</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="kt">FILE</span> <span class="o">*</span><span class="n">file</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">sz</span><span class="p">;</span>
+
+    <span class="n">file</span> <span class="o">=</span> <span class="n">fopen</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s">"rb"</span><span class="p">);</span>
+    <span class="n">fseek</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">SEEK_END</span><span class="p">);</span>
+    <span class="n">sz</span> <span class="o">=</span> <span class="n">ftell</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+    <span class="n">rewind</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+    <span class="o">*</span><span class="n">buff</span> <span class="o">=</span> <span class="p">(</span><span class="kt">char</span> <span class="o">*</span><span class="p">)</span><span class="n">calloc</span><span class="p">(</span><span class="n">sz</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">fread</span><span class="p">(</span><span class="o">*</span><span class="n">buff</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">sz</span><span class="p">,</span> <span class="n">file</span><span class="p">);</span>
+    <span class="n">fclose</span><span class="p">(</span><span class="n">file</span><span class="p">);</span>
+
+    <span class="k">return</span> <span class="n">sz</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">()</span>
+<span class="p">{</span>
+    <span class="kt">char</span> <span class="o">*</span><span class="n">buff</span><span class="p">;</span>
+    <span class="kt">int</span> <span class="n">i</span><span class="p">,</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r2</span><span class="p">,</span> <span class="n">size</span><span class="p">;</span>
+
+    <span class="n">size</span> <span class="o">=</span> <span class="n">read_file</span><span class="p">(</span><span class="s">"flag.enc"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buff</span><span class="p">);</span>
+
+    <span class="n">r1</span> <span class="o">=</span> <span class="o">*</span><span class="p">(</span><span class="kt">int</span> <span class="o">*</span><span class="p">)</span><span class="n">buff</span><span class="p">;</span>
+    <span class="n">srand</span><span class="p">(</span><span class="n">r1</span><span class="p">);</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%d</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="n">r1</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">4</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">size</span><span class="p">;</span> <span class="o">++</span><span class="n">i</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">r1</span> <span class="o">=</span> <span class="n">rand</span><span class="p">();</span>
+        <span class="n">r2</span> <span class="o">=</span> <span class="n">rand</span><span class="p">()</span> <span class="o">&amp;</span> <span class="mi">7</span><span class="p">;</span>
+        <span class="n">buff</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">buff</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&lt;&lt;</span> <span class="p">(</span><span class="mi">8</span> <span class="o">-</span> <span class="n">r2</span><span class="p">))</span> <span class="o">|</span> <span class="p">((</span><span class="kt">unsigned</span> <span class="kt">char</span><span class="p">)</span><span class="n">buff</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">&gt;&gt;</span> <span class="n">r2</span><span class="p">);</span>
+        <span class="n">buff</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">^=</span> <span class="n">r1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">"%s</span><span class="se">\n</span><span class="s">"</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">buff</span><span class="p">[</span><span class="mi">4</span><span class="p">]);</span>
+
+    <span class="n">free</span><span class="p">(</span><span class="n">buff</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div></div>
+
+<p>We’re almost finished we just have to compile the code and execute it.</p>
+
+<p><img src="Hack%20the%20box%20simple%20encryptor%205f8803c102474ba391f296090a42c244/Untitled%202.png" alt="Untitled" /></p>
+:ET
