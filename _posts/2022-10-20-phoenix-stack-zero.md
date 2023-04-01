@@ -67,13 +67,7 @@ then there is a condition that checks if `changeme` is changed to something othe
 
 Our task in this challenge is to simply change the variable `changeme`
 
-![My Image](/img/posts/stack0/Untitled.png)
-
-Above I displayed the stack, and how it stores local variables.
-
-which means that the string `buffer` is above `changeme`
-
-![Untitled](/img/posts/stack0/Untitled%201.png)
+which means that the string `buffer` is above `changeme` in the stack
 
 Therefore if we could manage to write on the string `buffer` some string longer than 64 characters we can overwrite it and thus we will be writing on `changeme` because it’s bellow it 😎
 
