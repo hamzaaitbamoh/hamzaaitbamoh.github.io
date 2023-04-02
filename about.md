@@ -7,10 +7,10 @@ background: "/img/bg-about.jpg"
 
 Hi there!
 
-When I was a child, I enjoyed doing pranks to my friends and family, like spying on the camera, spying on the wire, make them click links to take them to funny websites... I've never been aware of how those tools work, I was just using them for fun.
-In fact, I was a script kiddie!
+As a software engineer, I view code like an artist views their paint palette - a tool for creating and bringing new ideas to life. However, I also understand that with great power comes great responsibility - that's why I prioritize the security aspect, to protect users from potential adversaries.
 
-I am now a software engineering student.
-I love doing ctfs and cybersec related challenges.
+I used to participate in bug bounty programs mostly on HackerOne but I soon realized that the effort required often outweighed the potential rewards.
 
-I'm journaling my journey of going beyond being a script kiddie and I'm sharing it.
+In fact, to stay up-to-date with the latest trends and techniques in cybersecurity, I enjoy playing capture the flag (CTF) competitions and other challenges.
+
+Through my blog, I am journaling my journey as a software engineer and cybersecurity enthusiast. By sharing my experiences and insights with the world, I hope to inspire others to explore this exciting and rapidly-evolving field, while also raising awareness about the importance of digital security and ethical technology use.
