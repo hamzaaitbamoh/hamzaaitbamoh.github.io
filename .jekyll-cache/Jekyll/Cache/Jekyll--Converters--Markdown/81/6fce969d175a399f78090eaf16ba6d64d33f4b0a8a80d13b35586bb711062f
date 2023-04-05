@@ -1,4 +1,4 @@
-I":<h1 id="phoenix-exploit-education">Phoenix exploit education</h1>
+I"s<h1 id="phoenix-exploit-education">Phoenix exploit education</h1>
 
 <h1 id="stack-0"><strong>Stack 0:</strong></h1>
 
@@ -60,13 +60,7 @@
 
 <p>Our task in this challenge is to simply change the variable <code class="language-plaintext highlighter-rouge">changeme</code></p>
 
-<p><img src="/img/posts/stack0/Untitled.png" alt="My Image" /></p>
-
-<p>Above I displayed the stack, and how it stores local variables.</p>
-
-<p>which means that the string <code class="language-plaintext highlighter-rouge">buffer</code> is above <code class="language-plaintext highlighter-rouge">changeme</code></p>
-
-<p><img src="/img/posts/stack0/Untitled%201.png" alt="Untitled" /></p>
+<p>which means that the string <code class="language-plaintext highlighter-rouge">buffer</code> is above <code class="language-plaintext highlighter-rouge">changeme</code> in the stack</p>
 
 <p>Therefore if we could manage to write on the string <code class="language-plaintext highlighter-rouge">buffer</code> some string longer than 64 characters we can overwrite it and thus we will be writing on <code class="language-plaintext highlighter-rouge">changeme</code> because it’s bellow it 😎</p>
 
