@@ -1,7 +1,7 @@
 ---
 layout: post
 title: " Domain controller basics | Active Directory | Red Team:"
-subtitle: "Active Directory from the perspective of the Domain Controller"
+subtitle: "Active Directory from the Domain Controller perspective"
 date: 2023-04-05 00:56:13 -0400
 background: "/img/posts/curberus.jpg"
 ---
