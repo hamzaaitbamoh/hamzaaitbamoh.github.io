@@ -1,0 +1,122 @@
+I"!<h1 id="active-directory-part-2--windows-computers">Active Directory Part 2 | Windows Computers:</h1>
+
+<p>We’ve talked about domain controllers last time, because it would be a top asset to hack as a pentester, move on now to windows computers which we should encounter a lot when doing a pentest on a domain.</p>
+
+<h2 id="how-can-i-identify-windows-computers-">How can I identify windows computers ?</h2>
+
+<p>You can enumerate the domain with the tool ldapsearch</p>
+
+<p><img src="/img/posts/AD2/Capture_dcran_2023-04-06_100205.png" alt="Capture d’écran 2023-04-06 100205.png" /></p>
+
+<p>In case, we have no credentials we can scan for open port, but for most windows computer, they have several open ports by default like <code class="language-plaintext highlighter-rouge">Netbios name service</code> in the port 137 thus it can allow us to even resolve the NetBIOS name from the IP.</p>
+
+<p>I’ll use <code class="language-plaintext highlighter-rouge">nbtscan</code> for scanning:</p>
+
+<p><img src="/img/posts/AD2/Untitled.png" alt="Untitled" /></p>
+
+<p>SMB also is a way to go, it is used to create shares which can contain valuable information.</p>
+
+<p><img src="/img/posts/AD2/Untitled%201.png" alt="Untitled" /></p>
+
+<h2 id="how-can-i-connect-to-windows-computers-">How can I connect to windows computers ?</h2>
+
+<p>For me, the most important pentesting tool for windows is impacket, it is a collection of python classes and functions working with various windows network protocols.</p>
+
+<p>psexec.py,wmiexec.py and so many use the protocole RPC over SMB.</p>
+
+<p>Furthermore, those tools perform pass-the-hash attacks easily.</p>
+
+<p><img src="/img/posts/AD2/Untitled%202.png" alt="Untitled" /></p>
+
+<p>This way we are using NTLM authentication mechanism, but in Active directory kerberos is used by default.</p>
+
+<p>To use Kerberos you need to provide a Kerberos ticket to impacket. you can just set a ccache file to being used by impacket.</p>
+
+<p>In order to get a kerberos ticket to use, you can request one by using the user password, the NT hash (Overpass-the-Hash) or the Kerberos keys (Pass-The-Key).</p>
+
+<p><img src="/img/posts/AD2/Untitled%203.png" alt="Untitled" /></p>
+
+<h2 id="lsassexe-credentials-">LSASS.exe credentials :</h2>
+
+<p>The LSASS (Local Security Authority Subsystem Service) process (lsass.exe) is a common location on a Windows machine for storing credentials. This process manages the security-related operations of the computer, including user authentication.</p>
+
+<p>When a user logs in interactively to a computer, either by physically accessing the computer or via RDP, their credentials are cached in the LSASS process. This caching allows for Single Sign-On (SSO) when network logon is required to access other domain computers.</p>
+
+<p>LSASS uses various Security Support Providers (SSPs) to cache credentials and provide different authentication methods. These SSPs include:</p>
+
+<ul>
+  <li>Kerberos SSP: responsible for managing Kerberos authentication and storing tickets and Kerberos keys for current logged-in users.</li>
+  <li>NTLMSSP or MSV SSP: responsible for handling NTLM authentication and storing NT hashes for current logged-in users. It does not cache the credentials used.</li>
+  <li>Digest SSP: responsible for implementing the Digest Access protocol used by HTTP applications. This SSP stores the clear-text user password to calculate the digest. Although password caching is disabled by default since Windows 2008 R2, it can still be enabled by setting the HKLM\SYSTEM\CurrentControlSet\Control\SecurityProviders\WDigest\UseLogonCredential registry entry to 1.</li>
+</ul>
+
+<p>Accessing the LSASS process memory requires SeDebugPrivilege held by administrators. Retrieving cached credentials from LSASS memory can reveal NT hash, Kerberos keys and tickets, and plaintext passwords in older or misconfigured machines.</p>
+
+<p>To extract credentials using mimikatz, several commands can be used to retrieve different secrets from logged-in users:</p>
+
+<ul>
+  <li>sekurlsa::logonpasswords: Extracts NT hashes and passwords.</li>
+  <li>sekurlsa::ekeys: Retrieves Kerberos keys.</li>
+  <li>sekurlsa::tickets: Gets Kerberos tickets stored on the machine.</li>
+</ul>
+
+<p><img src="/img/posts/AD2/Untitled%204.png" alt="Untitled" /></p>
+
+<p>In case, LSA protection is enabled it can be bypassed using :</p>
+
+<p><a href="https://github.com/RedCursorSecurityConsulting/PPLKiller">https://github.com/RedCursorSecurityConsulting/PPLKiller</a></p>
+
+<h2 id="registry-credentials">Registry credentials:</h2>
+
+<p>LSA secrets are a protected storage area for important data used by the Local Security Authority in Windows. They contain various types of sensitive data, including cached domain records, passwords for various services, private user data, and more. Accessing to this data is restricted to the system.</p>
+
+<p>In the disk, the LSA secrets are saved in the <code class="language-plaintext highlighter-rouge">SECURITY [hive](https://docs.microsoft.com/en-us/windows/win32/sysinfo/registry-hives)</code> file, that is encrypted with the BootKey/SysKey (stored in the SYSTEM hive file).</p>
+
+<p>Moreover, in the SECURITY hive file, there are also stored the credentials from the last domain users logged in the machine, known as the Domain cached credentials (DCC). Thus, the computer can authenticate the domain user even if the connection with the domain controllers is lost. This cached credentials are MSCACHEV2/MSCASH hashes, different from the NT hashes, so they cannot be used to perform a Pass-The-Hash, but you can still try to crack them in order to retrieve the user password.</p>
+
+<p>And the other place where there are credentials is the <code class="language-plaintext highlighter-rouge">SAM hive</code> file, that contains the NT hashes of the local users of the computer. This could be useful since sometimes organizations set the same local Administrator password in the domain computers.</p>
+
+<h2 id="how-to-dump-those-credentials-">How to dump those credentials ?</h2>
+
+<p>We can dump credentials from SAM and SECURITY hives using mimikatz.</p>
+
+<ul>
+  <li><code class="language-plaintext highlighter-rouge">lsadump::secrets</code>: Get the LSA secrets.</li>
+  <li><code class="language-plaintext highlighter-rouge">lsadump::cache</code>: Retrieve the cached domain logons.</li>
+  <li><code class="language-plaintext highlighter-rouge">lsadump::sam</code>: Fetch the local account credentials.</li>
+</ul>
+
+<p>But first we need to acquire SYSTEM session executing the following command: <code class="language-plaintext highlighter-rouge">token::elevate</code> , and anable SeDebugPrivilege <code class="language-plaintext highlighter-rouge">privilege::debug</code></p>
+
+<p><img src="/img/posts/AD2/Untitled.jpeg" alt="Untitled" /></p>
+
+<p><img src="/img/posts/AD2/Untitled%201.jpeg" alt="Untitled" /></p>
+
+<p><img src="/img/posts/AD2/Untitled%202.jpeg" alt="Untitled" /></p>
+
+<p><img src="/img/posts/AD2/Untitled%203.jpeg" alt="Untitled" /></p>
+
+<p>Another way to dump those credentials is to simply save those hives that contains credentials with <code class="language-plaintext highlighter-rouge">reg save</code> command and move them to our attacker machine and dump them using <code class="language-plaintext highlighter-rouge">secretsdump</code> from impacket.</p>
+
+<p>We will need the <strong>SECURITY</strong> and <strong>SAM</strong> hive files but also <strong>SYSTEM</strong> hive because it contains the system Boot Key (or System Key) that allows to decrypt the SECURITY and SAM hives.</p>
+
+<p><img src="/img/posts/AD2/Untitled%205.png" alt="Untitled" /></p>
+
+<p>After moving them to our kali machine as we said here’s what we got:</p>
+
+<p><img src="/img/posts/AD2/Untitled%206.png" alt="Untitled" /></p>
+
+<ul>
+  <li>The section $MACHINE.ACC contains the computer account password (encoded in hexadecimal), as well the NT hash.</li>
+  <li>The DPAPI_SYSTEM section contains the master DPAPI keys of the system. These keys allow to decrypt the user files.</li>
+  <li>The Dumping cached domain logon information section contains the Domain Cached Credentials. Let’s crack one of them using hashcat.</li>
+</ul>
+
+<p>As we can see we must use -m 2100 as our hash type is DCC2.</p>
+
+<p><img src="/img/posts/AD2/Untitled%207.png" alt="Untitled" /></p>
+
+<p><img src="/img/posts/AD2/Untitled%208.png" alt="Untitled" /></p>
+
+<p><img src="/img/posts/AD2/Untitled%204.jpeg" alt="Untitled" /></p>
+:ET

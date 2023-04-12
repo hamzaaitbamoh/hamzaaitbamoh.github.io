@@ -1,9 +1,9 @@
 ---
 layout: post
 title: " Domain controller basics | Active Directory | Red Team:"
-subtitle: "Active Directory from the Domain Controller perspective"
+subtitle: "Understand Domain controller basics in an active directory environment"
 date: 2023-04-05 00:56:13 -0400
-background: "/img/posts/curberus.jpg"
+background: "/img/posts/domsec.png"
 ---
 
 # Active Directory Part 1 | Domain controller:
