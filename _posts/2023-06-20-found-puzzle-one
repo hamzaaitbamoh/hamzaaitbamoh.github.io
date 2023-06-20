@@ -1,3 +1,11 @@
+---
+layout: post
+title: " A piece of puzzle found : Understanding cybersecurity business as a whole "
+subtitle: "a personal perspective built on experience"
+date: 2023-06-20 00:56:13 -0400
+background: "/img/posts/cyber-security-for-business.png"
+---
+
 # A piece of puzzle found : Understanding cybersecurity business as a whole 
 
 It all started in the year 2021 after the promulgation of the law 05-20 on cybersecurity, where cyberattacks and data breaches increased sharply. It was my first internship in cybersecurity where I was introduced to the field, my coding background and my lack of cybersecurity skills force me to perform the following task : Building a web application that scans for open ports and vulnerabilities, it was then when I was introduced to technical audits.
