@@ -1,0 +1,27 @@
+# A piece of puzzle found : Understanding cybersecurity business as a whole 
+
+It all started in the year 2021 after the promulgation of the law 05-20 on cybersecurity, where cyberattacks and data breaches increased sharply. It was my first internship in cybersecurity where I was introduced to the field, my coding background and my lack of cybersecurity skills force me to perform the following task : Building a web application that scans for open ports and vulnerabilities, it was then when I was introduced to technical audits.
+
+The next summer, I found an internship in the financial sector where I was in charge of integrating Wazuh as SIEM in a part of their network architecture. It was then when I came across a pentester who advices me to participate in CTFs, and I started playing on hack the box.
+
+My last year internship was in red teaming where I was mainly focusing on taking over active directories.
+
+I learned plenty of things about cybersecurity going from audits , SOC and red teaming.
+
+However I was trying to understand the whole picture of the tasks I performed in my last internships, I was asking myself questions like : 
+
+Scanning for open ports and vulnerabilities would detect security holes to fix but how often organizations make those scans and is it enough to secure a network? 
+
+why would a financial firm deploy a SIEM ? when it is time to do it? why some entreprises doesn’t deploy it and take resort of a third party service? 
+
+How would I use results of active directory takeover paths to secure a AD environment ? It’s cool to find holes and paths to hack a domain controller, but what happens after finding and fixing those vulnerabilities ?
+
+That was all part of a big plan!
+
+That plan is handled by someone maybe a CISO. He is directly linked to the CEO, sometimes it’s linked to the CIO which clips his wings to perform better because CISO plans goes beyond CIO (it’s a long topic for another blog).
+
+this plan is triggered by an impetus which defines it, it’s the word RISK.
+
+Risk is the most important puzzle piece of cybersecurity.
+
+![Untitled](https://s3-us-west-2.amazonaws.com/secure.notion-static.com/1f313387-453e-4357-99c2-a06069caa0a1/Untitled.png)
