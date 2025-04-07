@@ -1,6 +1,6 @@
 ---
 layout: post
-title: " Domain controller basics | Active Directory | Red Team:"
+title: " Domain controller basics | Active Directory | Penetration Testing:"
 subtitle: "Understand Domain controller basics in an active directory environment"
 date: 2023-04-05 00:56:13 -0400
 background: "/img/posts/domsec.png"

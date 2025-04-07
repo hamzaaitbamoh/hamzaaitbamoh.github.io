@@ -1,6 +1,6 @@
 ---
 layout: post
-title: " Windows Computer basics | Active Directory | Red Team:"
+title: " Windows Computer basics | Active Directory | Penetration Testing:"
 subtitle: "Understand Windows Computers security"
 date: 2023-04-12 00:56:13 -0400
 background: "/img/posts/windowssec.png"

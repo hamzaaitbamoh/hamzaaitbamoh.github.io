@@ -1,6 +1,10 @@
-# blog1
-
-Status: Not started
+---
+layout: post
+title: "Container Hardening | Part 1"
+subtitle: "Why Your Docker Container Isn’t as Isolated as You Think (and How to Fix It)"
+date: 2025-04-07 23:45:13 -0400
+background: "/img/posts/docker-security.jpg"
+---
 
 # Container Hardening – Part 1: How to secure docker containers?
 
@@ -8,13 +12,13 @@ Docker is often imagined as a magic box, something isolated, safe, and self-cont
 
 ## Docker is Just a Process on the Host
 
-![image.png](image.png)
+![image.png](/img/posts/Cnt1/image.png)
 
 When you start a container, you're not launching a VM. You're just running a regular Linux process one that shares the same kernel as your host system.
 
-![image.png](766376a4-448c-4ec9-8a6b-3fe6cc018436.png)
+![image.png](/img/posts/Cnt1/766376a4-448c-4ec9-8a6b-3fe6cc018436.png)
 
-![image.png](a3b29020-bab5-4d3d-8e7e-338cf21231eb.png)
+![image.png](/img/posts/Cnt1/a3b29020-bab5-4d3d-8e7e-338cf21231eb.png)
 
 You’ll see the container is a process running under Docker's supervision. It’s isolated using namespaces and cgroups, but it’s not truly separate from the host.
 
@@ -27,7 +31,7 @@ You’ll also see a couple of additional Docker-related processes around it; tha
 **-pid=host: Containers Can See the Host**
 By default, Docker containers have their own PID namespace. But if you run:
 
-![image.png](image%201.png)
+![image.png](/img/posts/Cnt1/image%201.png)
 
 Now your container shares the host's PID namespace. That means:
 
@@ -42,11 +46,11 @@ This completely breaks process isolation.
 **Unprivileged (Default)**
 Containers run with limited capabilities. They can't access most kernel modules, hardware devices, or perform sensitive operations like mounting arbitrary filesystems.
 
-![image.png](image%202.png)
+![image.png](/img/posts/Cnt1/image%202.png)
 
 **Privileged**
 
-![image.png](image%203.png)
+![image.png](/img/posts/Cnt1/image%203.png)
 
 Now your container has full access to host devices and all capabilities. It can:
 
@@ -68,7 +72,7 @@ By default, Docker gives containers a set of capabilities like:
 
 You can inspect them with: capsh --print
 
-![image.png](image%204.png)
+![image.png](/img/posts/Cnt1/image%204.png)
 
 Imagine you’re running a containerized application that listens on port 80, like a basic web server.
 To do this, your container needs only one capability: NET_BIND_SERVICE, which allows binding to ports below 1024 (privileged port).
@@ -191,7 +195,7 @@ This tool checks your Docker configuration against the **CIS Docker Benchmark**,
 - Audit logging
 - Secure credential storage
 
-![image.png](image%205.png)
+![image.png](/img/posts/Cnt1/image%205.png)
 
 ## Conclusion
 
