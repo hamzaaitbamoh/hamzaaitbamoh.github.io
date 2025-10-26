@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "Container Hardening | Part 1"
+title: "Container Hardening"
 subtitle: "Why Your Docker Container Isn’t as Isolated as You Think (and How to Fix It)"
 date: 2025-04-07 23:45:13 -0400
 background: "/img/posts/docker-security.jpg"
