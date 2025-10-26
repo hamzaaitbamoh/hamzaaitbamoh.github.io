@@ -6,7 +6,7 @@ date: 2025-04-07 23:45:13 -0400
 background: "/img/posts/docker-security.jpg"
 ---
 
-# Container Hardening – Part 1: How to secure docker containers?
+# Container Hardening : How to secure docker containers?
 
 Docker is often imagined as a magic box, something isolated, safe, and self-contained. But in reality, Docker is just a thin abstraction over Linux features. If you want to secure your containers, you need to first understand how they actually work.
 
