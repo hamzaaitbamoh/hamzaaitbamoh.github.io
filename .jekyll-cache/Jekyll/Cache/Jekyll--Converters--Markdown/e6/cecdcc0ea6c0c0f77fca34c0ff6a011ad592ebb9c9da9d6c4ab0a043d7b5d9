@@ -1,0 +1,330 @@
+I"�7<h1 id="the-chain-of-trust-in-kubernetes-from-component-certificates-to-user-access-and-rbac">The Chain of Trust in Kubernetes: From Component Certificates to User Access and RBAC</h1>
+
+<h2 id="introduction">Introduction</h2>
+
+<p>Kubernetes is a system built on <strong>trust and verification</strong>.<br />
+Every component — from the API server to your <code class="language-plaintext highlighter-rouge">kubectl</code> command — communicates through <strong>mutual TLS (mTLS)</strong>, proving its identity with a certificate signed by a <strong>cluster Certificate Authority (CA)</strong>.</p>
+
+<p>Behind every command lies a sophisticated <strong>Public Key Infrastructure (PKI)</strong> that defines how Kubernetes knows:</p>
+<ul>
+  <li><strong>Who</strong> is talking (authentication)</li>
+  <li><strong>What</strong> they’re allowed to do (authorization)</li>
+</ul>
+
+<p>In this deep dive, we’ll explore:</p>
+<ol>
+  <li>How Kubernetes components communicate securely using certificates.</li>
+  <li>How the kubeconfig file encapsulates identity and trust.</li>
+  <li>How to create and manage your own user certificate.</li>
+  <li>How to use RBAC (Role-Based Access Control) to grant precise permissions.</li>
+</ol>
+
+<p>All examples use <strong>Minikube</strong>, but these principles apply to any Kubernetes cluster (kubeadm, AKS, EKS, GKE, etc.).</p>
+
+<hr />
+
+<h2 id="1-certificates-between-kubernetes-components">1. Certificates Between Kubernetes Components</h2>
+
+<h3 id="11-why-certificates-matter">1.1 Why Certificates Matter</h3>
+
+<p>The Kubernetes control plane is composed of several components : the API Server, Controller Manager, Scheduler, and others.. that must communicate securely. Every interaction between them uses TLS with certificates signed by the same CA.</p>
+
+<p>This ensures:</p>
+<ul>
+  <li><strong>Integrity</strong> — data can’t be altered in transit.</li>
+  <li><strong>Confidentiality</strong> — all control-plane communication is encrypted.</li>
+  <li><strong>Authentication</strong> — each component proves its identity before any exchange.</li>
+</ul>
+
+<hr />
+
+<h3 id="12-the-cluster-pki-layout">1.2 The Cluster PKI Layout</h3>
+
+<p>A Kubernetes control plane (deployed manually or via kubeadm) maintains its PKI under <code class="language-plaintext highlighter-rouge">/etc/kubernetes/pki/</code>.<br />
+In Minikube, it’s located under <code class="language-plaintext highlighter-rouge">~/.minikube</code>.</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>Certificate</th>
+      <th>Key</th>
+      <th>Purpose</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>CA</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">ca.crt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">ca.key</code></td>
+      <td>Root of trust; signs all other certificates</td>
+    </tr>
+    <tr>
+      <td><strong>API Server</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">apiserver.crt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">apiserver.key</code></td>
+      <td>Serves HTTPS on port 6443</td>
+    </tr>
+    <tr>
+      <td><strong>Controller Manager</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">controller-manager.crt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">controller-manager.key</code></td>
+      <td>Authenticates to the API server</td>
+    </tr>
+    <tr>
+      <td><strong>Scheduler</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">scheduler.crt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">scheduler.key</code></td>
+      <td>Authenticates to the API server</td>
+    </tr>
+    <tr>
+      <td><strong>Kubelet (Node)</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">kubelet.crt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">kubelet.key</code></td>
+      <td>Proves node identity</td>
+    </tr>
+    <tr>
+      <td><strong>Admin (kubectl)</strong></td>
+      <td><code class="language-plaintext highlighter-rouge">admin.crt</code></td>
+      <td><code class="language-plaintext highlighter-rouge">admin.key</code></td>
+      <td>Client certificate for the admin user</td>
+    </tr>
+  </tbody>
+</table>
+
+<p><img src="/img/posts/K8scerts/certs-components.png" alt="image.png" /></p>
+
+<p>Hierarchy of trust:</p>
+
+<p><img src="/img/posts/K8scerts/certs-components-sc.png" alt="image.png" /></p>
+
+<h3 id="13-mutual-authentication-flow">1.3 Mutual Authentication Flow</h3>
+
+<ol>
+  <li><strong>API Server</strong> loads its certificate (<code class="language-plaintext highlighter-rouge">apiserver.crt</code>) and exposes the HTTPS endpoint.</li>
+  <li><strong>Controller Manager</strong>, <strong>Scheduler</strong>, and <strong>Kubelets</strong> connect using their own client certificates.</li>
+  <li>The API Server validates their signatures against the CA.</li>
+  <li>If valid, the connection is established; otherwise, it’s rejected.</li>
+</ol>
+
+<p>This <strong>mutual TLS (mTLS)</strong> handshake ensures that every component is verified — no anonymous communication inside the cluster.</p>
+
+<hr />
+
+<h2 id="2-kubeconfig-the-bridge-between-users-and-the-cluster">2. kubeconfig: The Bridge Between Users and the Cluster</h2>
+
+<h3 id="21-what-is-the-kubeconfig-file">2.1 What Is the kubeconfig File?</h3>
+
+<p>Your <code class="language-plaintext highlighter-rouge">~/.kube/config</code> is a YAML file that tells <code class="language-plaintext highlighter-rouge">kubectl</code>:</p>
+<ul>
+  <li><strong>Which cluster</strong> to talk to</li>
+  <li><strong>Which certificate</strong> to use</li>
+  <li><strong>Which context</strong> (user + namespace) is active</li>
+</ul>
+
+<p>Example:</p>
+
+<p><img src="/img/posts/K8scerts/kubeconfig.png" alt="image.png" /></p>
+
+<h3 id="22-default-minikube-identity">2.2 Default Minikube Identity</h3>
+
+<p>Minikube automatically creates a client certificate with the following subject:</p>
+
+<p>CN=minikube, O=system:masters</p>
+
+<p>The “system:masters” group is bound by default to the ClusterRoleBinding named “cluster-admin”, giving full privileges to that user. This is why the default Minikube user can perform any action within the cluster.</p>
+
+<p><img src="/img/posts/K8scerts/minikube-cert.png" alt="image.png" /></p>
+
+<p><img src="/img/posts/K8scerts/sys.png" alt="image.png" /></p>
+
+<h2 id="3-creating-a-custom-user-and-certificate">3. Creating a Custom User and Certificate</h2>
+
+<p>To understand authentication beyond the built-in admin, we can create a new user manually.</p>
+
+<p><img src="/img/posts/K8scerts/RBAC-2.png" alt="image.png" /></p>
+
+<h3 id="step-1--generate-a-private-key">Step 1 — Generate a Private Key</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl genrsa <span class="nt">-out</span> hamza.key 2048
+</code></pre></div></div>
+<h3 id="step-2--create-a-certificate-signing-request">Step 2 — Create a Certificate Signing Request</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl req <span class="nt">-new</span> <span class="nt">-key</span> hamza.key <span class="nt">-out</span> hamza.csr <span class="nt">-subj</span> <span class="s2">"/CN=hamza/O=dev-team"</span>
+</code></pre></div></div>
+
+<p>Here, CN (Common Name) represents the username, and O (Organization) defines the group to which the user belongs.</p>
+
+<h3 id="step-3--sign-the-certificate-with-the-cluster-ca">Step 3 — Sign the Certificate with the Cluster CA</h3>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>openssl x509 <span class="nt">-req</span> <span class="nt">-in</span> hamza.csr
+<span class="nt">-CA</span> ~/.minikube/ca.crt <span class="nt">-CAkey</span> ~/.minikube/ca.key
+<span class="nt">-CAcreateserial</span> <span class="nt">-out</span> hamza.crt <span class="nt">-days</span> 365
+</code></pre></div></div>
+
+<p>This creates a valid client certificate trusted by the cluster’s CA.</p>
+
+<p><img src="/img/posts/K8scerts/certs.png" alt="image.png" /></p>
+
+<h3 id="step-4--add-the-user-to-kubeconfig">Step 4 — Add the User to kubeconfig</h3>
+
+<p>Extend the kubeconfig file with the new user and context:</p>
+
+<div class="language-yaml highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="na">users</span><span class="pi">:</span>
+
+<span class="na">name</span><span class="pi">:</span> <span class="s">hamza</span>
+<span class="na">user</span><span class="pi">:</span>
+<span class="na">client-certificate</span><span class="pi">:</span> <span class="s">/home/hamza/k8s-certs/hamza.crt</span>
+<span class="na">client-key</span><span class="pi">:</span> <span class="s">/home/hamza/k8s-certs/hamza.key</span>
+
+<span class="na">contexts</span><span class="pi">:</span>
+
+<span class="na">name</span><span class="pi">:</span> <span class="s">hamza-context</span>
+<span class="na">context</span><span class="pi">:</span>
+<span class="na">cluster</span><span class="pi">:</span> <span class="s">minikube</span>
+<span class="na">namespace</span><span class="pi">:</span> <span class="s">default</span>
+<span class="na">user</span><span class="pi">:</span> <span class="s">hamza</span>
+</code></pre></div></div>
+
+<p>Then switch to that context:</p>
+
+<div class="language-bash highlighter-rouge"><div class="highlight"><pre class="highlight"><code>kubectl config use-context hamza-context
+</code></pre></div></div>
+
+<p>When executing kubectl get pods, the API server authenticates the certificate but denies access because no authorization has been granted yet:</p>
+
+<p>Error from server (Forbidden): User “hamza” cannot list resource “pods”</p>
+
+<p><img src="/img/posts/K8scerts/noperm.png" alt="image.png" /></p>
+
+<h2 id="4-role-based-access-control-rbac">4. Role-Based Access Control (RBAC)</h2>
+
+<p>Once a user is authenticated, Kubernetes verifies what actions that user can perform using Role-Based Access Control.</p>
+
+<p><img src="/img/posts/K8scerts/rbac.png" alt="image.png" /></p>
+
+<h3 id="41-rbac-core-concepts">4.1 RBAC Core Concepts</h3>
+
+<p>Role: Defines permissions for resources within a single namespace.</p>
+
+<p>ClusterRole: Defines permissions across all namespaces.</p>
+
+<p>RoleBinding: Binds a Role to a user or group within a namespace.</p>
+
+<p>ClusterRoleBinding: Binds a ClusterRole to a user or group globally.</p>
+
+<h3 id="42-creating-a-custom-read-only-role">4.2 Creating a Custom Read-Only Role</h3>
+
+<p>Create a file named hamza-role.yaml:</p>
+
+<p>apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+namespace: default
+name: hamza-viewer
+rules:</p>
+
+<p>apiGroups: [””]
+resources: [“pods”, “services”, “configmaps”]
+verbs: [“get”, “list”, “watch”]</p>
+
+<p>apiGroups: [“apps”]
+resources: [“deployments”, “replicasets”]
+verbs: [“get”, “list”, “watch”]</p>
+
+<p>Apply it:</p>
+
+<p>kubectl apply -f hamza-role.yaml</p>
+
+<h3 id="43-binding-the-role-to-the-user">4.3 Binding the Role to the User</h3>
+
+<p>Create a file named hamza-rolebinding.yaml:</p>
+
+<p>apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+name: hamza-viewer-binding
+namespace: default
+subjects:</p>
+
+<p>kind: User
+name: hamza
+apiGroup: rbac.authorization.k8s.io
+roleRef:
+kind: Role
+name: hamza-viewer
+apiGroup: rbac.authorization.k8s.io</p>
+
+<p>Apply it:</p>
+
+<p>kubectl apply -f hamza-rolebinding.yaml</p>
+
+<h3 id="44-testing-permissions">4.4 Testing Permissions</h3>
+
+<p>Switch to the context of the new user:</p>
+
+<p>kubectl config use-context hamza-context</p>
+
+<p>Allowed actions:</p>
+
+<p>kubectl get pods
+kubectl get deployments
+kubectl get services</p>
+
+<p>Denied actions:</p>
+
+<p>kubectl delete pod <pod-name></pod-name></p>
+
+<p>Expected output:</p>
+
+<p>User “hamza” cannot delete resource “pods”</p>
+
+<h3 id="45-verifying-rbac-permissions">4.5 Verifying RBAC Permissions</h3>
+
+<p>You can query what the user can do:</p>
+
+<p>kubectl auth can-i list pods
+kubectl auth can-i delete pods
+kubectl auth can-i create deployments</p>
+
+<p>Output:</p>
+
+<p>yes
+no
+no</p>
+
+<h2 id="5-the-systemmasters-group">5. The system:masters Group</h2>
+
+<p>The default ClusterRoleBinding “cluster-admin” grants full control to the group “system:masters”:</p>
+
+<p>kubectl describe clusterrolebinding cluster-admin</p>
+
+<p>Subjects:
+Group system:masters</p>
+
+<p>Any user certificate with O=system:masters automatically inherits cluster-admin rights. This is why the Minikube default user is an administrator. Custom users, such as “hamza” with O=dev-team, must receive explicit RBAC bindings.</p>
+
+<h2 id="6-layers-of-kubernetes-security">6. Layers of Kubernetes Security</h2>
+
+<p>Kubernetes security operates through multiple layers:</p>
+
+<p>Transport Security: TLS certificates ensure encrypted, authenticated communication.</p>
+
+<p>Authentication: Certificates, service tokens, or OIDC identify users and components.</p>
+
+<p>Authorization: RBAC and ClusterRoles determine what actions are allowed.</p>
+
+<p>Admission Control: Validates and enforces policies before object creation.</p>
+
+<p>Runtime Security: Network Policies and Pod Security controls limit runtime behavior.</p>
+
+<p>Each layer depends on the integrity of the previous one, forming a complete security chain.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Kubernetes security begins with cryptographic identity. Certificates secure communication between the control-plane components, while RBAC governs what authenticated users can do.</p>
+
+<p>The Certificate Authority forms the root of trust. Certificates authenticate machines and users. The kubeconfig file binds those identities to clusters and namespaces. RBAC enforces least-privilege access across all namespaces.</p>
+
+<p>By generating your own certificates, adding them to kubeconfig, and defining custom roles, you gain full visibility into how Kubernetes authenticates and authorizes every interaction. Understanding this trust chain is essential for operating Kubernetes securely in production environments.</p>
+:ET
